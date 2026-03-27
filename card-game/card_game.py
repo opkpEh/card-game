@@ -1,3 +1,4 @@
+from tkinter import SEL
 import pygame as pg
 pg.init()
 pg.display.set_caption("Card Game")
@@ -7,7 +8,7 @@ clock = pg.time.Clock()
 import pygame as pg
 
 class Card:
-    def __init__(self, x, y, width, height, name, cost, color=(255,255,255)):
+    def __init__(self, x, y, width, height, name, cost, color=(255,255,255)): # x & y are the top-left corner of the card
         self.rect = pg.Rect(x, y, width, height)
         self.color = color
 
@@ -16,16 +17,30 @@ class Card:
 
         self.hovered = False
         self.selected = False
+        self.dragging = False
+
+        self.offset= pg.Vector2(0,0)
 
         self.font = pg.font.SysFont(None, 24)
 
     def update(self, dt, mouse_pos):
         self.hovered = self.rect.collidepoint(mouse_pos)
 
+        self.selected = self.hovered and pg.mouse.get_pressed()[0]
+
+        if self.dragging:
+            self.rect.x = mouse_pos[0] + self.offset.x
+            self.rect.y = mouse_pos[1] + self.offset.y
+
         if self.hovered:
-            self.rect.y -= 2
+            print(f"Hovering over {self.name}")
+        else :
+            pass
+
+        if self.selected:
+            print(f"Selected {self.name}")
         else:
-            self.rect.y += 2
+            pass
 
 
     def draw(self, screen):
@@ -73,16 +88,29 @@ while True:
         if event.type == pg.QUIT:
             pg.quit()
             exit()
+        
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if event.button == 1: # left click
+                for card in hand.cards:
+                    if card.rect.collidepoint(event.pos):
+                        card.dragging = True
+
+                        mouse_x, mouse_y = event.pos
+
+                        card.offset.x = card.rect.x - mouse_x
+                        card.offset.y = card.rect.y - mouse_y
+        if event.type == pg.MOUSEBUTTONUP:
+            if event.button == 1:
+                for card in hand.cards:
+                    card.dragging = False
+
     mouse_pos = pg.mouse.get_pos()
-    
     dt = clock.tick(60) / 1000
 
-    screen.fill((0, 128, 0))
+    for card in hand.cards:
+        card.update(dt, mouse_pos)
 
+    screen.fill((0, 128, 0))
     hand.draw(screen)
 
     pg.display.flip()
-    pg.display.flip()
-
-    screen.fill((0, 128, 0))
-    clock.tick(60)
